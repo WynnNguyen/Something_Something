@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>a little reminder</title>
+<style>
+  :root{
+    --pink:#f7d9e8;
+    --pink2:#fbeaf3;
+    --purple:#ddd4f7;
+    --purple2:#eee8ff;
+    --ink:#55465f;
+    --deep:#78628a;
+    --paper:rgba(255,255,255,.72);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;}
+  body{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:24px;
+    color:var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    background:
+      radial-gradient(circle at 15% 18%, rgba(255,255,255,.75) 0 7%, transparent 23%),
+      radial-gradient(circle at 82% 12%, rgba(255,255,255,.6) 0 5%, transparent 20%),
+      linear-gradient(135deg,var(--pink2),var(--pink) 43%,var(--purple2) 68%,var(--purple));
+    overflow-x:hidden;
+  }
+
+  .sparkle{position:fixed;opacity:.35;font-size:18px;pointer-events:none;animation:float 5s ease-in-out infinite}
+  .s1{top:12%;left:12%}.s2{top:20%;right:14%;animation-delay:1.2s}.s3{bottom:14%;left:16%;animation-delay:2.1s}.s4{bottom:18%;right:12%;animation-delay:.7s}
+  @keyframes float{50%{transform:translateY(-7px) rotate(8deg);opacity:.6}}
+
+  .wrap{width:min(92vw,620px);text-align:center}
+  .front,.inside{
+    background:var(--paper);
+    border:1px solid rgba(111,84,130,.12);
+    border-radius:28px;
+    box-shadow:0 24px 60px rgba(93,65,111,.14);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+  .front{padding:38px 26px 34px}
+  .tiny{font-size:.82rem;letter-spacing:.18em;text-transform:lowercase;opacity:.62;margin-bottom:8px}
+  h1{font-weight:400;font-size:clamp(2rem,7vw,3.8rem);margin:0 0 8px}
+  .sub{margin:0 0 20px;opacity:.66}
+
+  .cat-wrap{display:grid;place-items:center;margin:14px 0 20px}
+  .cat{width:min(280px,72vw);filter:drop-shadow(0 12px 20px rgba(89,65,104,.12))}
+  .cat .tail{transform-origin:83px 163px;animation:tail 2.8s ease-in-out infinite}
+  @keyframes tail{50%{transform:rotate(7deg)}}
+  .cat .blink{transform-origin:center;animation:blink 4.5s infinite}
+  @keyframes blink{0%,45%,48%,100%{transform:scaleY(1)}46%,47%{transform:scaleY(.08)}}
+
+  .boop-btn{
+    border:0;
+    background:linear-gradient(135deg,#f2bfd6,#cfc0f3);
+    color:#4f4059;
+    font:inherit;
+    font-size:1rem;
+    padding:12px 24px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(103,76,121,.14);
+    transition:.2s ease;
+  }
+  .boop-btn:hover{transform:translateY(-2px) scale(1.02)}
+  .boop-btn:active{transform:scale(.98)}
+
+  .inside{display:none;margin-top:18px;padding:42px 30px 36px;opacity:0;transform:translateY(12px)}
+  .inside.show{display:block;animation:reveal .55s ease forwards}
+  @keyframes reveal{to{opacity:1;transform:translateY(0)}}
+  .message{font-size:clamp(1.08rem,3vw,1.34rem);line-height:1.75}
+  .message strong{display:block;font-size:clamp(1.65rem,5vw,2.45rem);font-weight:500;margin-bottom:16px;color:#665276}
+  .success{margin-top:26px;font-size:.85rem;letter-spacing:.08em;opacity:.55}
+  .paw{display:inline-block;animation:paw .7s ease .2s both}
+  @keyframes paw{from{transform:scale(.4) rotate(-18deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+
+
+  .fat-cat{position:fixed;width:96px;opacity:.9;filter:drop-shadow(0 10px 16px rgba(89,65,104,.10));pointer-events:none;animation:bob 4.5s ease-in-out infinite}
+  .fc1{left:4%;top:16%;transform:rotate(-8deg)}
+  .fc2{right:4%;top:22%;transform:rotate(7deg);animation-delay:.8s}
+  .fc3{left:6%;bottom:10%;transform:rotate(5deg);animation-delay:1.4s}
+  .fc4{right:6%;bottom:8%;transform:rotate(-6deg);animation-delay:2s}
+  .fc5{left:18%;top:5%;transform:rotate(4deg) scale(.82);animation-delay:2.5s}
+  .fc6{right:18%;top:6%;transform:rotate(-5deg) scale(.78);animation-delay:1.1s}
+  .fc7{left:22%;bottom:2%;transform:rotate(-3deg) scale(.74);animation-delay:1.8s}
+  .fc8{right:22%;bottom:3%;transform:rotate(5deg) scale(.76);animation-delay:.4s}
+  @keyframes bob{50%{translate:0 -7px}}
+  .peek-cat{width:92px;margin:0 auto 8px;display:block;filter:drop-shadow(0 8px 14px rgba(89,65,104,.10))}
+
+
+  .boop-pop{
+    position:fixed;
+    left:50%;
+    top:46%;
+    transform:translate(-50%,-50%) scale(.65);
+    font-size:clamp(1.5rem,6vw,2.8rem);
+    font-weight:600;
+    color:#7a5a8a;
+    opacity:0;
+    pointer-events:none;
+    z-index:20;
+  }
+  .boop-pop.show{animation:boopPop .75s ease forwards}
+  @keyframes boopPop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}
+    30%{opacity:1;transform:translate(-50%,-58%) scale(1.08)}
+    100%{opacity:0;transform:translate(-50%,-78%) scale(.95)}
+  }
+  .paw-pop{position:fixed;z-index:19;pointer-events:none;font-size:22px;opacity:0}
+  .paw-pop.go{animation:pawBurst 1s ease-out forwards}
+  @keyframes pawBurst{
+    0%{opacity:0;transform:translate(0,0) scale(.5) rotate(0deg)}
+    20%{opacity:.9}
+    100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.1) rotate(var(--r))}
+  }
+  .committee{margin-top:10px;font-size:.72rem;letter-spacing:.04em;opacity:.42}
+
+  @media (max-width:480px){
+    body{padding:18px}
+    .front{padding:30px 18px 28px}
+    .inside{padding:34px 22px 30px}
+    .fat-cat{width:68px;opacity:.72}
+    .fc1{left:1%;top:13%}.fc2{right:1%;top:20%}.fc3{left:1%;bottom:7%}.fc4{right:1%;bottom:6%}
+    .fc5{left:16%;top:3%}.fc6{right:16%;top:4%}.fc7{left:18%;bottom:1%}.fc8{right:18%;bottom:1%}
+  }
+</style>
+</head>
+<body>
+  <span class="sparkle s1">✦</span><span class="sparkle s2">✧</span><span class="sparkle s3">✦</span><span class="sparkle s4">✧</span>
+  <div class="boop-pop" id="boopPop">boop!</div>
+
+  <svg class="fat-cat fc1" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#eadcf5"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#eadcf5"/>
+    <ellipse cx="45" cy="55" rx="4" ry="6" fill="#5d4c67"/><ellipse cx="75" cy="55" rx="4" ry="6" fill="#5d4c67"/>
+    <path d="M56 68 Q60 72 64 68" fill="#b67999"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+  <svg class="fat-cat fc2" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#f4d4e5"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#f4d4e5"/>
+    <path d="M42 56 Q46 52 50 56 M70 56 Q74 52 78 56" fill="none" stroke="#5d4c67" stroke-width="3" stroke-linecap="round"/>
+    <path d="M56 68 Q60 72 64 68" fill="#b67999"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+  <svg class="fat-cat fc3" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#d8c8f3"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#d8c8f3"/>
+    <ellipse cx="45" cy="55" rx="4" ry="6" fill="#5d4c67"/><ellipse cx="75" cy="55" rx="4" ry="6" fill="#5d4c67"/>
+    <path d="M54 69 Q60 75 66 69" fill="none" stroke="#6f5c76" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+  <svg class="fat-cat fc4" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#eddcf8"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#eddcf8"/>
+    <path d="M42 56 Q46 59 50 56 M70 56 Q74 59 78 56" fill="none" stroke="#5d4c67" stroke-width="3" stroke-linecap="round"/>
+    <path d="M56 68 Q60 72 64 68" fill="#b67999"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+
+  <svg class="fat-cat fc5" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#f6ddea"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#f6ddea"/>
+    <ellipse cx="45" cy="55" rx="4" ry="6" fill="#5d4c67"/><ellipse cx="75" cy="55" rx="4" ry="6" fill="#5d4c67"/>
+    <path d="M56 68 Q60 72 64 68" fill="#b67999"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+  <svg class="fat-cat fc6" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#ddd3f6"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#ddd3f6"/>
+    <path d="M42 56 Q46 52 50 56 M70 56 Q74 52 78 56" fill="none" stroke="#5d4c67" stroke-width="3" stroke-linecap="round"/>
+    <path d="M54 69 Q60 74 66 69" fill="none" stroke="#6f5c76" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+  <svg class="fat-cat fc7" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#efd9f8"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#efd9f8"/>
+    <ellipse cx="45" cy="55" rx="4" ry="6" fill="#5d4c67"/><ellipse cx="75" cy="55" rx="4" ry="6" fill="#5d4c67"/>
+    <path d="M56 68 Q60 72 64 68" fill="#b67999"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+  <svg class="fat-cat fc8" viewBox="0 0 120 100" aria-hidden="true">
+    <path d="M28 40 L37 16 L50 35 M70 35 L84 16 L91 42" fill="#f7d7e7"/>
+    <ellipse cx="60" cy="58" rx="42" ry="34" fill="#f7d7e7"/>
+    <path d="M42 56 Q46 59 50 56 M70 56 Q74 59 78 56" fill="none" stroke="#5d4c67" stroke-width="3" stroke-linecap="round"/>
+    <path d="M56 68 Q60 72 64 68" fill="#b67999"/>
+    <ellipse cx="34" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="68" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+  </svg>
+
+
+  <main class="wrap">
+    <section class="front" id="front">
+      <div class="tiny">a little reminder</div>
+
+      <div class="cat-wrap">
+        <svg class="cat" viewBox="0 0 320 250" role="img" aria-label="A cute round pastel cat holding a sign that says boop me">
+          <!-- tail -->
+          <path class="tail" d="M240 165 C300 158, 297 214, 250 205" fill="none" stroke="#c7b7e8" stroke-width="24" stroke-linecap="round"/>
+          <!-- body -->
+          <ellipse cx="160" cy="156" rx="95" ry="70" fill="#eadcf5"/>
+          <!-- ears -->
+          <path d="M93 95 L107 49 L133 88 Z" fill="#eadcf5"/>
+          <path d="M187 88 L216 49 L228 99 Z" fill="#eadcf5"/>
+          <path d="M101 83 L109 62 L123 86 Z" fill="#f4bfd5" opacity=".9"/>
+          <path d="M198 85 L214 62 L219 91 Z" fill="#f4bfd5" opacity=".9"/>
+          <!-- head -->
+          <ellipse cx="160" cy="107" rx="73" ry="58" fill="#eadcf5"/>
+          <!-- eyes -->
+          <g class="blink" fill="#5d4c67">
+            <ellipse cx="134" cy="108" rx="5" ry="8"/>
+            <ellipse cx="187" cy="108" rx="5" ry="8"/>
+          </g>
+          <!-- nose + mouth -->
+          <path d="M156 123 Q160 127 164 123 Q160 119 156 123" fill="#b67999"/>
+          <path d="M160 126 C156 132 151 132 148 130 M160 126 C164 132 169 132 172 130" fill="none" stroke="#6f5c76" stroke-width="2.2" stroke-linecap="round"/>
+          <!-- blush -->
+          <ellipse cx="117" cy="128" rx="13" ry="6" fill="#efb9cf" opacity=".65"/>
+          <ellipse cx="204" cy="128" rx="13" ry="6" fill="#efb9cf" opacity=".65"/>
+          <!-- paws -->
+          <ellipse cx="115" cy="174" rx="25" ry="18" fill="#e4d4f2"/>
+          <ellipse cx="205" cy="174" rx="25" ry="18" fill="#e4d4f2"/>
+          <!-- sign -->
+          <rect x="103" y="150" width="114" height="63" rx="12" fill="#fff7fb" stroke="#caaed8" stroke-width="3"/>
+          <text x="160" y="188" text-anchor="middle" font-size="22" font-family="Georgia, serif" fill="#675270">boop me</text>
+        </svg>
+      </div>
+
+      <button class="boop-btn" onclick="boop()">boop</button>
+    </section>
+
+    <section class="inside" id="inside" aria-live="polite">
+
+      <svg class="peek-cat" viewBox="0 0 120 95" aria-hidden="true">
+        <path d="M27 39 L36 15 L50 34 M70 34 L84 15 L93 39" fill="#eadcf5"/>
+        <ellipse cx="60" cy="57" rx="43" ry="34" fill="#eadcf5"/>
+        <path d="M40 55 Q45 50 50 55 M70 55 Q75 50 80 55" fill="none" stroke="#5d4c67" stroke-width="3" stroke-linecap="round"/>
+        <path d="M56 67 Q60 71 64 67" fill="#b67999"/>
+        <ellipse cx="34" cy="67" rx="8" ry="4" fill="#efb9cf" opacity=".7"/><ellipse cx="86" cy="67" rx="8" ry="4" fill="#efb9cf" opacity=".7"/>
+      </svg>
+      <div class="message">
+        <strong>You are important.</strong>
+        I hope you remember that on days like this.<br>
+        It’s okay if things feel like a lot.<br>
+        Be a little extra gentle with yourself today.
+      </div>
+      <div class="success"><span class="paw">🐾</span> boop delivered successfully.</div>
+      <div class="committee">certified by the fat cat committee</div>
+    </section>
+  </main>
+
+<script>
+  function boop(){
+    const btn=document.querySelector('.boop-btn');
+    btn.textContent='booped!';
+    btn.animate([
+      {transform:'scale(1)'},
+      {transform:'scale(.88)'},
+      {transform:'scale(1.08)'},
+      {transform:'scale(1)'}
+    ],{duration:420,easing:'ease-out'});
+
+    const pop=document.getElementById('boopPop');
+    pop.classList.remove('show');
+    void pop.offsetWidth;
+    pop.classList.add('show');
+
+    const rect=btn.getBoundingClientRect();
+    const originX=rect.left+rect.width/2;
+    const originY=rect.top+rect.height/2;
+    const bursts=[[-90,-55,-24],[-45,-85,16],[0,-100,-8],[50,-78,20],[92,-50,-16]];
+    bursts.forEach(([x,y,r],i)=>{
+      const paw=document.createElement('span');
+      paw.className='paw-pop';
+      paw.textContent='🐾';
+      paw.style.left=originX+'px';
+      paw.style.top=originY+'px';
+      paw.style.setProperty('--x',x+'px');
+      paw.style.setProperty('--y',y+'px');
+      paw.style.setProperty('--r',r+'deg');
+      document.body.appendChild(paw);
+      setTimeout(()=>paw.classList.add('go'),i*55);
+      setTimeout(()=>paw.remove(),1300);
+    });
+
+    document.getElementById('inside').classList.add('show');
+    setTimeout(()=>document.getElementById('inside').scrollIntoView({behavior:'smooth', block:'center'}),180);
+  }
+</script>
+</body>
+</html>
