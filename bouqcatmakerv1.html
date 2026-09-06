@@ -331,15 +331,18 @@
     add(tag, 'feDropShadow', { dx: '0', dy: '4', stdDeviation: '5', 'flood-color': '#826c94', 'flood-opacity': '.11' });
   }
 
+  function solidBg(accent){
+    const colors = {
+      pastel: '#f5f0fa',
+      pink: '#fbf0f6',
+      purple: '#f3eefb',
+      blue: '#eef5fc'
+    };
+    return colors[accent] || colors.pastel;
+  }
+
   function drawBackground(svg, uid, r, accent){
-    add(svg, 'rect', { x: 0, y: 0, width: 400, height: 500, fill: 'url(#bg-' + uid + ')' });
-    const pal = palettes(accent);
-    for(let i = 0; i < 22; i++){
-      add(svg, 'circle', {
-        cx: (r() * 400).toFixed(1), cy: (r() * 500).toFixed(1), r: (2 + r() * 7).toFixed(1),
-        fill: pick([...pal, '#ffffff'], r), opacity: (.1 + r() * .18).toFixed(2)
-      });
-    }
+    add(svg, 'rect', { x: 0, y: 0, width: 400, height: 500, fill: solidBg(accent) });
   }
 
   function drawLeaf(parent, x, y, s, rot, color){
@@ -623,20 +626,65 @@
     return ['upper-left','upper-right','top'][hashStr(name + '|' + note) % 3];
   }
 
+  function splitNoteLines(text, maxChars = 16, maxLines = 2){
+    const value = (text || 'tiny note').trim();
+    if(!value) return ['tiny note'];
+    const words = value.split(/\s+/);
+    if(words.length === 1){
+      if(value.length <= maxChars) return [value];
+      const first = value.slice(0, maxChars);
+      const second = value.length <= maxChars * 2 ? value.slice(maxChars) : value.slice(maxChars, maxChars * 2 - 1) + '…';
+      return [first, second].filter(Boolean);
+    }
+    const lines = [''];
+    for(const word of words){
+      const current = lines[lines.length - 1];
+      const trial = current ? current + ' ' + word : word;
+      if(trial.length <= maxChars){
+        lines[lines.length - 1] = trial;
+      } else if(lines.length < maxLines){
+        lines.push(word);
+      } else {
+        lines[maxLines - 1] = trimText(lines[maxLines - 1] + ' ' + word, maxChars);
+        break;
+      }
+    }
+    return lines.slice(0, maxLines);
+  }
+
+  function drawNoteCard(parent, cx, cy, angle, name, note){
+    const w = 126, h = 68;
+    const g = add(parent, 'g', { transform: `translate(${cx} ${cy}) rotate(${angle})` });
+    add(g, 'rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 14, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2 });
+    const padX = -w / 2 + 16;
+    add(g, 'text', {
+      x: padX, y: -6,
+      'font-size': 11.2,
+      'font-weight': 900,
+      fill: '#6b5877',
+      'text-anchor': 'start',
+      'font-family': 'Nunito, Segoe UI, sans-serif'
+    }, trimText(name, 14));
+    const lines = splitNoteLines(note, 18, 2);
+    lines.forEach((line, i) => {
+      add(g, 'text', {
+        x: padX, y: 13 + i * 12,
+        'font-size': 8.3,
+        fill: '#91809d',
+        'text-anchor': 'start',
+        'font-family': 'Nunito, Segoe UI, sans-serif'
+      }, line);
+    });
+  }
+
   function drawNote(svg, uid, name, note, p){
     const g = add(svg, 'g', { filter: 'url(#tag-' + uid + ')' });
     if(p === 'upper-right'){
-      add(g, 'rect', { x: 274, y: 44, width: 104, height: 58, rx: 13, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2, transform: 'rotate(7 274 44)' });
-      add(g, 'text', { x: 326, y: 68, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 900, fill: '#6b5877', transform: 'rotate(7 326 68)' }, trimText(name, 12));
-      add(g, 'text', { x: 326, y: 88, 'text-anchor': 'middle', 'font-size': 7.8, fill: '#91809d', transform: 'rotate(7 326 88)' }, trimText(note, 18));
+      drawNoteCard(g, 326, 75, 7, name, note);
     } else if(p === 'top'){
-      add(g, 'rect', { x: 148, y: 26, width: 104, height: 56, rx: 13, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2 });
-      add(g, 'text', { x: 200, y: 49, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 900, fill: '#6b5877' }, trimText(name, 12));
-      add(g, 'text', { x: 200, y: 68, 'text-anchor': 'middle', 'font-size': 7.8, fill: '#91809d' }, trimText(note, 18));
+      drawNoteCard(g, 200, 54, 0, name, note);
     } else {
-      add(g, 'rect', { x: 22, y: 46, width: 104, height: 58, rx: 13, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2, transform: 'rotate(-7 22 46)' });
-      add(g, 'text', { x: 74, y: 70, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 900, fill: '#6b5877', transform: 'rotate(-7 74 70)' }, trimText(name, 12));
-      add(g, 'text', { x: 74, y: 90, 'text-anchor': 'middle', 'font-size': 7.8, fill: '#91809d', transform: 'rotate(-7 74 90)' }, trimText(note, 18));
+      drawNoteCard(g, 74, 75, -7, name, note);
     }
   }
 
@@ -745,45 +793,24 @@
           canvas.height = preset.height;
           const ctx = canvas.getContext('2d');
 
-          const grad = ctx.createLinearGradient(0, 0, preset.width, preset.height);
-          grad.addColorStop(0, '#fff8fc');
-          grad.addColorStop(.48, '#f4eeff');
-          grad.addColorStop(1, '#eef5ff');
-          ctx.fillStyle = grad;
+          ctx.fillStyle = solidBg(document.getElementById('accent').value);
           ctx.fillRect(0, 0, preset.width, preset.height);
 
-          const bgRng = rngFactory(hashStr(filename + '|' + recipientName + '|' + preset.width + 'x' + preset.height));
-          const bubbles = preset.width > preset.height ? 26 : 34;
-          for(let i = 0; i < bubbles; i++){
-            const x = bgRng() * preset.width;
-            const y = bgRng() * preset.height;
-            const radius = (preset.width > preset.height ? 18 : 24) + bgRng() * (preset.width > preset.height ? 40 : 55);
-            const colors = ['rgba(246,203,224,.14)','rgba(220,204,244,.14)','rgba(209,225,250,.16)','rgba(255,255,255,.18)'];
-            ctx.fillStyle = colors[Math.floor(bgRng() * colors.length)];
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          const crop = preset.width > preset.height
+            ? { sx: 18, sy: 26, sw: 325, sh: 430, widthFactor: .43, heightFactor: .88, bottomPad: .05 }
+            : { sx: 18, sy: 24, sw: 270, sh: 442, widthFactor: .93, heightFactor: .82, bottomPad: .03 };
 
-          const svgW = 400, svgH = 500;
-          const fitW = preset.width * (preset.width > preset.height ? .42 : .86) * preset.fit;
-          const fitH = preset.height * (preset.width > preset.height ? .86 : .74) * preset.fit;
+          const fitW = preset.width * crop.widthFactor;
+          const fitH = preset.height * crop.heightFactor;
           let drawW = fitW;
-          let drawH = drawW * (svgH / svgW);
+          let drawH = drawW * (crop.sh / crop.sw);
           if(drawH > fitH){
             drawH = fitH;
-            drawW = drawH * (svgW / svgH);
+            drawW = drawH * (crop.sw / crop.sh);
           }
           const x = (preset.width - drawW) / 2;
-          const y = preset.height - drawH - preset.height * preset.bottomPad;
-          ctx.drawImage(img, x, y, drawW, drawH);
-
-          if(recipientName){
-            ctx.fillStyle = 'rgba(101,84,116,.9)';
-            ctx.textAlign = 'center';
-            ctx.font = `${preset.width > preset.height ? 36 : 44}px ui-rounded, "Nunito", "Segoe UI", sans-serif`;
-            ctx.fillText(recipientName, preset.width / 2, preset.width > preset.height ? 74 : 92);
-          }
+          const y = preset.height - drawH - preset.height * crop.bottomPad;
+          ctx.drawImage(img, crop.sx, crop.sy, crop.sw, crop.sh, x, y, drawW, drawH);
 
           canvas.toBlob((pngBlob) => {
             URL.revokeObjectURL(url);
