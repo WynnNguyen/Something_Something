@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CritterBloom Bouquet Maker — Final Prototype</title>
+<style>
+  :root{
+    --bg:#f8f3fb;
+    --panel:#fffdfef2;
+    --line:#eadff0;
+    --ink:#655474;
+    --muted:#9483a1;
+    --pink:#f6cbe0;
+    --purple:#dcccf4;
+    --blue:#d1e1fa;
+    --shadow:0 18px 40px rgba(123,98,142,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:ui-rounded,"Nunito","Segoe UI",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 10% 10%, #fff2f7 0, transparent 21%),
+      radial-gradient(circle at 90% 15%, #f1edff 0, transparent 24%),
+      radial-gradient(circle at 50% 100%, #edf5ff 0, transparent 28%),
+      var(--bg);
+  }
+  .app{
+    width:min(1280px,96vw);
+    margin:28px auto;
+    display:grid;
+    grid-template-columns:350px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  .panel,.stage{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:28px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(10px);
+  }
+  .panel{padding:22px;position:sticky;top:16px}
+  h1{margin:0 0 4px;font-size:1.46rem;line-height:1.12}
+  .sub{margin:0 0 14px;color:var(--muted);font-size:.86rem}
+  .label{display:block;font-size:.82rem;font-weight:900;margin:0 0 6px}
+  .entry-list{display:flex;flex-direction:column;gap:10px;margin:10px 0 14px}
+  .entry{background:#fffafd;border:1px solid var(--line);border-radius:18px;padding:12px}
+  .entry-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .entry-title{font-weight:900;font-size:.88rem}
+  input,textarea,select,button{font:inherit}
+  input,textarea,select{
+    width:100%;border:1px solid var(--line);background:#fffafd;color:var(--ink);
+    border-radius:14px;padding:10px 11px;outline:none
+  }
+  textarea{resize:vertical;min-height:74px}
+  input:focus,textarea:focus,select:focus{
+    border-color:#ccb8e2;box-shadow:0 0 0 3px rgba(211,197,234,.32)
+  }
+  .entry-grid{display:grid;gap:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+  button{
+    border:0;border-radius:14px;padding:10px 12px;cursor:pointer;font-weight:900;
+    color:#5e4c69;background:#eee5f8
+  }
+  button:hover{filter:brightness(.985)}
+  .primary{background:linear-gradient(135deg,var(--pink),var(--purple),var(--blue))}
+  .wide{grid-column:1/-1}
+  .mini-btn{padding:7px 10px;font-size:.76rem}
+  .hint{color:var(--muted);font-size:.76rem;line-height:1.35}
+  .stage{padding:18px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .toolbar h2{margin:0;font-size:1.05rem}
+  .toolbar p{margin:2px 0 0}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
+  .bouquet-card{
+    background:linear-gradient(180deg,#fffefd,#faf7ff);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:10px;
+    box-shadow:0 12px 28px rgba(124,98,143,.07)
+  }
+  .bouquet-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 4px 8px}
+  .bouquet-name{margin:0;font-weight:900;font-size:.9rem}
+  .svg-wrap{aspect-ratio:4/5;overflow:hidden;border-radius:18px;background:#f9f3fb}
+  svg{display:block;width:100%;height:100%}
+  @media(max-width:900px){
+    .app{grid-template-columns:1fr}
+    .panel{position:static}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="panel">
+    <h1>CritterBloom Bouquet Maker</h1>
+    <p class="sub">Create soft pastel bouquets made of critters, flowers, and foliage tied together with a bow. Each name and note generates a unique arrangement.</p>
+
+    <div id="entryList" class="entry-list"></div>
+
+    <div class="controls">
+      <button id="addEntry">Add person</button>
+      <button id="demoBtn">Load demo</button>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label class="label" for="sizeMode">Fullness</label>
+        <select id="sizeMode">
+          <option value="small">Light</option>
+          <option value="medium" selected>Full</option>
+          <option value="large">Extra full</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="seed">Seed</label>
+        <input id="seed" type="number" min="1" max="999999" value="7">
+      </div>
+      <div>
+        <label class="label" for="extras">Decor</label>
+        <select id="extras">
+          <option value="gentle">Light</option>
+          <option value="mixed" selected>Balanced</option>
+          <option value="chaotic">Abundant</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="notePlace">Note</label>
+        <select id="notePlace">
+          <option value="auto" selected>Auto</option>
+          <option value="upper-left">Upper left</option>
+          <option value="upper-right">Upper right</option>
+          <option value="top">Top center</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="accent">Palette</label>
+        <select id="accent">
+          <option value="pastel" selected>Pastel mix</option>
+          <option value="pink">Pink</option>
+          <option value="purple">Purple</option>
+          <option value="blue">Blue</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="bowStyle">Bow</label>
+        <select id="bowStyle">
+          <option value="auto" selected>Auto</option>
+          <option value="classic">Classic</option>
+          <option value="round">Round</option>
+          <option value="flutter">Flutter</option>
+          <option value="layered">Layered</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="shuffleBtn">Shuffle</button>
+      <button id="exportAllBtn">Export all</button>
+      <button class="primary wide" id="renderBtn">Generate</button>
+    </div>
+  </section>
+
+  <section class="stage">
+    <div class="toolbar">
+      <div>
+        <h2>Preview</h2>
+        <p class="hint">One bouquet per recipient.</p>
+      </div>
+    </div>
+    <div id="gallery" class="gallery"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const entryList = document.getElementById('entryList');
+  const gallery = document.getElementById('gallery');
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const defaults = [
+    { name: 'Wynn', note: 'you make things softer' },
+    { name: 'Mina', note: 'drink water please' },
+    { name: 'Linh', note: 'boop delivered successfully' }
+  ];
+
+  function hashStr(str){
+    let h = 2166136261 >>> 0;
+    for(let i = 0; i < str.length; i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function rngFactory(seed){
+    let a = seed >>> 0;
+    return () => {
+      a += 0x6D2B79F5;
+      let t = a;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function pick(arr, r){ return arr[Math.floor(r() * arr.length)]; }
+  function slugify(s){ return (s || 'bouquet').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'bouquet'; }
+  function esc(s){ return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+  function trimText(s, max){ s = (s || '').trim(); return s.length > max ? s.slice(0, max - 1) + '…' : (s || 'tiny note'); }
+  function el(tag, attrs = {}, text = ''){
+    const n = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+    if(text) n.textContent = text;
+    return n;
+  }
+  function add(parent, tag, attrs = {}, text = ''){
+    const n = el(tag, attrs, text);
+    parent.appendChild(n);
+    return n;
+  }
+
+  function makeEntry(data = {}){
+    const wrap = document.createElement('div');
+    wrap.className = 'entry';
+    wrap.innerHTML = `
+      <div class="entry-head">
+        <div class="entry-title">Person</div>
+        <button class="mini-btn removeBtn" type="button">Remove</button>
+      </div>
+      <div class="entry-grid">
+        <input class="nameInput" placeholder="Name" value="${esc(data.name || '')}">
+        <textarea class="noteInput" placeholder="Note">${esc(data.note || '')}</textarea>
+      </div>`;
+    wrap.querySelector('.removeBtn').addEventListener('click', () => {
+      if(entryList.children.length > 1){ wrap.remove(); renderAll(); }
+    });
+    wrap.querySelector('.nameInput').addEventListener('input', renderAll);
+    wrap.querySelector('.noteInput').addEventListener('input', renderAll);
+    entryList.appendChild(wrap);
+  }
+
+  function getEntries(){
+    return Array.from(entryList.querySelectorAll('.entry')).map(e => ({
+      name: e.querySelector('.nameInput').value.trim(),
+      note: e.querySelector('.noteInput').value.trim()
+    })).filter(x => x.name || x.note);
+  }
+
+  function palettes(mode){
+    if(mode === 'pink') return ['#f4bfd7','#ffd8e7','#f2aeca','#e9c6e8','#d6d3f7'];
+    if(mode === 'purple') return ['#d4c0ef','#e5d7f8','#c7b1e6','#e6c9ef','#d2def8'];
+    if(mode === 'blue') return ['#c5dafa','#dceafe','#b6d0f5','#d8d0f1','#d4e9ef'];
+    return ['#f5c9dd','#ddcdf3','#ccdef8','#f6d8e7','#d9e8f6'];
+  }
+
+  function critterCount(name, size){
+    const base = { small: 6, medium: 8, large: 10 }[size] || 8;
+    return clamp(base + Math.floor((name || '').replace(/\s+/g, '').length / 7), 6, 11);
+  }
+
+  function sequenceFromName(name, note, count, globalSeed){
+    const src = (name + '|' + note).trim() || 'someone lovely';
+    const chars = Array.from(src);
+    const r = rngFactory(hashStr(src + '::' + globalSeed));
+    const variants = {
+      corgi: ['gold','honey','peach','cream','tricolor'],
+      cat: ['cream','grey','charcoal','peach','calico','lavender','blue'],
+      bird: ['warm','soft','dusty','rosy','mocha','blue','yellow'],
+      bunny: ['cream','peach','grey','lavender'],
+      bear: ['cream','honey','mocha','pink'],
+      seal: ['grey','blue','cream','lavender'],
+      frog: ['mint','sage','lime'],
+      fox: ['peach','red','cream']
+    };
+    const moods = ['happy','sleepy','smile','blink'];
+    const types = ['corgi','cat','bird','bunny','bear','seal','frog','fox'];
+    const animals = [];
+    for(let i = 0; i < count; i++){
+      const code = chars[i % chars.length].charCodeAt(0);
+      const type = types[(code + i + Math.floor(r() * 11)) % types.length];
+      const list = variants[type];
+      animals.push({
+        type,
+        variant: list[(code + i * 3) % list.length],
+        mood: moods[(code + i * 2) % moods.length],
+        tilt: ((code % 17) - 8) * 1.2
+      });
+    }
+    return animals;
+  }
+
+  function fanSlots(count){
+    const patterns = {
+      6: [[200,150],[158,172],[242,172],[126,212],[200,204],[274,212]],
+      7: [[200,140],[154,161],[246,161],[118,202],[172,205],[228,205],[282,202]],
+      8: [[200,132],[151,153],[249,153],[111,194],[163,196],[237,196],[289,194],[200,230]],
+      9: [[200,126],[148,146],[252,146],[105,187],[157,186],[200,184],[243,186],[295,187],[200,226]],
+      10:[[200,120],[146,139],[254,139],[100,180],[151,177],[188,174],[212,174],[249,177],[300,180],[200,220]],
+      11:[[200,116],[146,135],[254,135],[96,176],[146,172],[182,169],[218,169],[254,172],[304,176],[165,218],[235,218]]
+    };
+    return (patterns[count] || patterns[8]).map((p, i) => ({ x: p[0], y: p[1], scale: i < 3 ? 1.03 : 0.98 }));
+  }
+
+  function attachDefs(svg, uid){
+    const defs = add(svg, 'defs');
+    const bg = add(defs, 'linearGradient', { id: 'bg-' + uid, x1: '0', y1: '0', x2: '1', y2: '1' });
+    add(bg, 'stop', { offset: '0%', 'stop-color': '#fff9fc' });
+    add(bg, 'stop', { offset: '60%', 'stop-color': '#f5efff' });
+    add(bg, 'stop', { offset: '100%', 'stop-color': '#eff6ff' });
+    const shadow = add(defs, 'filter', { id: 'shadow-' + uid, x: '-30%', y: '-30%', width: '160%', height: '160%' });
+    add(shadow, 'feDropShadow', { dx: '0', dy: '5', stdDeviation: '7', 'flood-color': '#887298', 'flood-opacity': '.11' });
+    const tag = add(defs, 'filter', { id: 'tag-' + uid, x: '-30%', y: '-30%', width: '160%', height: '160%' });
+    add(tag, 'feDropShadow', { dx: '0', dy: '4', stdDeviation: '5', 'flood-color': '#826c94', 'flood-opacity': '.11' });
+  }
+
+  function drawBackground(svg, uid, r, accent){
+    add(svg, 'rect', { x: 0, y: 0, width: 400, height: 500, fill: 'url(#bg-' + uid + ')' });
+    const pal = palettes(accent);
+    for(let i = 0; i < 22; i++){
+      add(svg, 'circle', {
+        cx: (r() * 400).toFixed(1), cy: (r() * 500).toFixed(1), r: (2 + r() * 7).toFixed(1),
+        fill: pick([...pal, '#ffffff'], r), opacity: (.1 + r() * .18).toFixed(2)
+      });
+    }
+  }
+
+  function drawLeaf(parent, x, y, s, rot, color){
+    add(parent, 'ellipse', { cx: x, cy: y, rx: 9 * s, ry: 4 * s, fill: color, transform: `rotate(${rot} ${x} ${y})` });
+  }
+
+  function drawStemBundle(svg, slots, r){
+    const g = add(svg, 'g');
+    const tieX = 200;
+    const tieY = 390;
+    slots.forEach((slot, i) => {
+      const baseX = tieX + (i - slots.length / 2) * 2;
+      const mx = (baseX + slot.x) / 2 + (r() - .5) * 18;
+      const my = (tieY + slot.y) / 2 - 30 - r() * 16;
+      add(g, 'path', {
+        d: `M ${baseX} ${tieY} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${slot.x} ${slot.y + 18}`,
+        fill: 'none', stroke: pick(['#93b99a','#a6c8aa','#8fb394'], r), 'stroke-width': 2.5, 'stroke-linecap': 'round'
+      });
+      if(i % 2 === 0){
+        drawLeaf(g, mx - 8, my + 8, .8, -35 + r() * 20, pick(['#a8cbaa','#b9d5bb','#98bb9d'], r));
+        drawLeaf(g, mx + 8, my + 14, .75, 35 - r() * 20, pick(['#a4c8a6','#bfd9c0','#8fb894'], r));
+      }
+    });
+  }
+
+  function drawPlantFan(svg, r, accent, size){
+    const g = add(svg, 'g');
+    const pal = palettes(accent);
+    const sprays = size === 'large' ? 11 : size === 'small' ? 7 : 9;
+    for(let i = 0; i < sprays; i++){
+      const spread = (i - (sprays - 1) / 2) / (sprays - 1 || 1);
+      const baseX = 200 + spread * 22;
+      const topX = 200 + spread * 150 + (r() - .5) * 12;
+      const topY = 90 + r() * 70 + Math.abs(spread) * 14;
+      add(g, 'path', {
+        d: `M ${baseX} 392 Q ${((baseX + topX) / 2).toFixed(1)} ${(245 - r() * 24).toFixed(1)} ${topX.toFixed(1)} ${topY.toFixed(1)}`,
+        fill: 'none', stroke: pick(['#8fb495','#9dc4a3','#89ae91'], r), 'stroke-width': 2.2, 'stroke-linecap': 'round'
+      });
+      for(let k = 0; k < 3; k++){
+        const t = .35 + k * .18;
+        const lx = baseX + (topX - baseX) * t;
+        const ly = 392 + (topY - 392) * t;
+        drawLeaf(g, lx - 8, ly, .8, -42 + r() * 18, pick(['#a3c7a6','#b5d2b7','#94b99a'], r));
+        drawLeaf(g, lx + 8, ly + 5, .75, 38 - r() * 18, pick(['#a8cbaa','#bdd8be','#9bbfa0'], r));
+      }
+      add(g, 'circle', { cx: topX.toFixed(1), cy: topY.toFixed(1), r: 4.1, fill: pick(pal, r), opacity: .9 });
+    }
+  }
+
+  function drawTinyFlower(parent, x, y, s, color){
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) scale(${s})` });
+    for(let k = 0; k < 5; k++){
+      const a = k * 72 * Math.PI / 180;
+      add(g, 'ellipse', {
+        cx: (Math.cos(a) * 6).toFixed(1), cy: (Math.sin(a) * 6).toFixed(1), rx: 5.5, ry: 3.6,
+        transform: `rotate(${k * 72} ${(Math.cos(a) * 6).toFixed(1)} ${(Math.sin(a) * 6).toFixed(1)})`, fill: color
+      });
+    }
+    add(g, 'circle', { cx: 0, cy: 0, r: 2.6, fill: '#fff5c5' });
+  }
+
+  function drawFillers(svg, r, accent, size){
+    const g = add(svg, 'g');
+    const pal = palettes(accent);
+    const count = size === 'large' ? 38 : size === 'small' ? 22 : 30;
+    for(let i = 0; i < count; i++){
+      const x = 95 + r() * 210;
+      const y = 88 + r() * 210;
+      if(r() > .42) drawTinyFlower(g, x, y, .38 + r() * .25, pick(pal, r));
+      else drawLeaf(g, x, y, .55 + r() * .24, (r() - .5) * 100, pick(['#a4c8a6','#b5d3b8','#95ba9a'], r));
+    }
+  }
+
+  function drawBlush(g){
+    add(g, 'ellipse', { cx: -12, cy: 8, rx: 7, ry: 3.9, fill: '#f9d2e0', opacity: .72 });
+    add(g, 'ellipse', { cx: 12, cy: 8, rx: 7, ry: 3.9, fill: '#f9d2e0', opacity: .72 });
+  }
+
+  function drawEyes(g, mood, x1, x2, y, dark){
+    if(mood === 'sleepy'){
+      add(g, 'path', { d: `M ${x1 - 4} ${y} Q ${x1} ${y + 3} ${x1 + 4} ${y}`, fill: 'none', stroke: dark, 'stroke-width': 1.8, 'stroke-linecap': 'round' });
+      add(g, 'path', { d: `M ${x2 - 4} ${y} Q ${x2} ${y + 3} ${x2 + 4} ${y}`, fill: 'none', stroke: dark, 'stroke-width': 1.8, 'stroke-linecap': 'round' });
+    } else if(mood === 'blink'){
+      add(g, 'circle', { cx: x1, cy: y, r: 2.5, fill: dark });
+      add(g, 'path', { d: `M ${x2 - 4} ${y} Q ${x2} ${y + 3} ${x2 + 4} ${y}`, fill: 'none', stroke: dark, 'stroke-width': 1.8, 'stroke-linecap': 'round' });
+    } else {
+      add(g, 'circle', { cx: x1, cy: y, r: 2.7, fill: dark });
+      add(g, 'circle', { cx: x2, cy: y, r: 2.7, fill: dark });
+    }
+  }
+
+  function mouth(g, edge, mood){
+    add(g, 'path', { d: 'M -6 13 Q 0 18 6 13', fill: 'none', stroke: edge, 'stroke-width': 1.7, 'stroke-linecap': 'round' });
+    if(mood === 'happy') add(g, 'path', { d: 'M -3 15 Q 0 20 3 15', fill: '#f4a9bc' });
+  }
+
+  function corgi(parent, x, y, s, v, mood, tilt){
+    const map = { gold:['#e8a666','#b5856d','#fffafc'], honey:['#db9761','#aa7b63','#fff9fb'], peach:['#ebb090','#b68876','#fff9fb'], cream:['#f0d3b5','#b99c8a','#fffafc'], tricolor:['#d99b68','#9f7667','#fff9fb'] };
+    const C = map[v] || map.gold;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'path', { d: 'M -24 -9 L -15 -32 L -2 -15 Z', fill: v === 'tricolor' ? '#685b62' : C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'path', { d: 'M 24 -9 L 15 -32 L 2 -15 Z', fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'ellipse', { cx: 0, cy: 0, rx: 24, ry: 22, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'path', { d: 'M -16 0 Q 0 -14 16 0 Q 12 14 0 17 Q -12 14 -16 0 Z', fill: C[2] });
+    drawBlush(g); drawEyes(g, mood, -8, 8, -1, '#5d4c58');
+    add(g, 'ellipse', { cx: 0, cy: 8, rx: 4, ry: 3, fill: '#5d4c58' }); mouth(g, '#5d4c58', mood);
+  }
+
+  function cat(parent, x, y, s, v, mood, tilt){
+    const map = { cream:['#f7f1e7','#b39d95','#5e5666'], grey:['#d9dbe3','#90909d','#5e5666'], charcoal:['#5a5564','#47414f','#fff8fd'], peach:['#f0d6c7','#b89a8a','#5e5666'], calico:['#f7eee3','#b59d95','#5e5666'], lavender:['#e7dff0','#a596b4','#5e5666'], blue:['#d6e4ef','#98aeb9','#56616d'] };
+    const C = map[v] || map.cream;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'path', { d: 'M -22 -10 L -13 -30 L -1 -15 Z', fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'path', { d: 'M 22 -10 L 13 -30 L 1 -15 Z', fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'ellipse', { cx: 0, cy: 0, rx: 23, ry: 22, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    if(v === 'calico'){
+      add(g, 'ellipse', { cx: -7, cy: -3, rx: 7, ry: 6, fill: '#e1ae80', opacity: .9 });
+      add(g, 'ellipse', { cx: 9, cy: 7, rx: 5, ry: 4, fill: '#8f7f7e', opacity: .7 });
+    }
+    drawBlush(g); drawEyes(g, mood, -7, 7, -2, C[2]);
+    add(g, 'path', { d: 'M -4 8 L 0 11 L 4 8', fill: '#efc6d3' }); mouth(g, C[1], mood);
+    add(g, 'path', { d: 'M -5 11 L -15 10 M -5 15 L -15 16 M 5 11 L 15 10 M 5 15 L 15 16', fill: 'none', stroke: C[1], 'stroke-width': 1.0, 'stroke-linecap': 'round', opacity: .82 });
+  }
+
+  function bird(parent, x, y, s, v, mood, tilt){
+    const map = { warm:['#dcb99b','#a28578','#aa8d96'], soft:['#e6c8b5','#ab8b7f','#b49aa1'], dusty:['#d1b3a1','#967b72','#9f8b93'], rosy:['#e7c0c8','#ad8d95','#b59aa9'], mocha:['#ccb39d','#957b74','#8e7d88'], blue:['#c8dce8','#839ba7','#91a9b7'], yellow:['#ead9a9','#a79367','#c9b37a'] };
+    const C = map[v] || map.warm;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'path', { d: 'M -11 -16 Q -3 -24 0 -11 Q -4 -12 -11 -16 Z', fill: C[2], stroke: C[1], 'stroke-width': 1.0, opacity: .92 });
+    add(g, 'path', { d: 'M 11 -16 Q 3 -24 0 -11 Q 4 -12 11 -16 Z', fill: C[2], stroke: C[1], 'stroke-width': 1.0, opacity: .92 });
+    add(g, 'ellipse', { cx: 0, cy: 3, rx: 22, ry: 20, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'path', { d: 'M -2 6 Q 8 -10 16 4 Q 8 15 -2 14 Z', fill: C[2], opacity: .95 });
+    drawBlush(g); drawEyes(g, mood, -5, 3, -5, '#554b58');
+    add(g, 'path', { d: 'M -16 -3 L -27 1 L -16 5 Z', fill: '#dea879' });
+  }
+
+  function bunny(parent, x, y, s, v, mood, tilt){
+    const map = { cream:['#f4eee6','#b7a39a'], peach:['#efd5cb','#b89a91'], grey:['#d9d9df','#9995a1'], lavender:['#e5dcf0','#a79ab6'] };
+    const C = map[v] || map.cream;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'ellipse', { cx: -9, cy: -25, rx: 7, ry: 18, fill: C[0], stroke: C[1], 'stroke-width': 1.4 });
+    add(g, 'ellipse', { cx: 9, cy: -25, rx: 7, ry: 18, fill: C[0], stroke: C[1], 'stroke-width': 1.4 });
+    add(g, 'ellipse', { cx: 0, cy: 0, rx: 22, ry: 21, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    drawBlush(g); drawEyes(g, mood, -7, 7, -2, '#5d5564');
+    add(g, 'ellipse', { cx: 0, cy: 8, rx: 3.2, ry: 2.5, fill: '#efc3d0' }); mouth(g, C[1], mood);
+  }
+
+  function bear(parent, x, y, s, v, mood, tilt){
+    const map = { cream:['#ead9c7','#a88d7b'], honey:['#d9b17e','#98775e'], mocha:['#b9957e','#785f57'], pink:['#e8c5cc','#ae8c96'] };
+    const C = map[v] || map.cream;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'circle', { cx: -16, cy: -16, r: 9, fill: C[0], stroke: C[1], 'stroke-width': 1.4 });
+    add(g, 'circle', { cx: 16, cy: -16, r: 9, fill: C[0], stroke: C[1], 'stroke-width': 1.4 });
+    add(g, 'ellipse', { cx: 0, cy: 0, rx: 23, ry: 22, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'ellipse', { cx: 0, cy: 8, rx: 10, ry: 8, fill: '#f7ede6', opacity: .8 });
+    drawBlush(g); drawEyes(g, mood, -8, 8, -3, '#5d5054');
+    add(g, 'ellipse', { cx: 0, cy: 7, rx: 3.8, ry: 3, fill: '#5d5054' }); mouth(g, C[1], mood);
+  }
+
+  function seal(parent, x, y, s, v, mood, tilt){
+    const map = { grey:['#d2d6dd','#8d929c'], blue:['#cddfea','#8ca4af'], cream:['#ece4dd','#aaa099'], lavender:['#ddd5e8','#9d91ab'] };
+    const C = map[v] || map.grey;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'ellipse', { cx: -12, cy: -14, rx: 6.5, ry: 5.8, fill: C[0], stroke: C[1], 'stroke-width': 1.3 });
+    add(g, 'ellipse', { cx: 12, cy: -14, rx: 6.5, ry: 5.8, fill: C[0], stroke: C[1], 'stroke-width': 1.3 });
+    add(g, 'ellipse', { cx: 0, cy: 1, rx: 24, ry: 21, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    drawBlush(g); drawEyes(g, mood, -8, 8, -3, '#57545d');
+    add(g, 'ellipse', { cx: 0, cy: 7, rx: 3.5, ry: 2.8, fill: '#66606b' });
+    add(g, 'path', { d: 'M -4 12 Q 0 16 4 12', fill: 'none', stroke: C[1], 'stroke-width': 1.6, 'stroke-linecap': 'round' });
+    add(g, 'path', { d: 'M -6 10 L -17 8 M -6 14 L -17 15 M 6 10 L 17 8 M 6 14 L 17 15', fill: 'none', stroke: C[1], 'stroke-width': 1, 'stroke-linecap': 'round', opacity: .82 });
+  }
+
+  function frog(parent, x, y, s, v, mood, tilt){
+    const map = { mint:['#bfe0c8','#799d82'], sage:['#b7d1b8','#728e73'], lime:['#d3e6b5','#869b6f'] };
+    const C = map[v] || map.mint;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'circle', { cx: -11, cy: -16, r: 9, fill: C[0], stroke: C[1], 'stroke-width': 1.4 });
+    add(g, 'circle', { cx: 11, cy: -16, r: 9, fill: C[0], stroke: C[1], 'stroke-width': 1.4 });
+    add(g, 'ellipse', { cx: 0, cy: 2, rx: 23, ry: 20, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    drawEyes(g, mood, -11, 11, -16, '#4e5a50'); drawBlush(g); mouth(g, C[1], mood);
+  }
+
+  function fox(parent, x, y, s, v, mood, tilt){
+    const map = { peach:['#e9a67e','#a87863'], red:['#d98764','#99634f'], cream:['#efd1b0','#ae8c72'] };
+    const C = map[v] || map.peach;
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${tilt}) scale(${s})` });
+    add(g, 'path', { d: 'M -23 -10 L -14 -31 L -2 -15 Z', fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'path', { d: 'M 23 -10 L 14 -31 L 2 -15 Z', fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'ellipse', { cx: 0, cy: 0, rx: 23, ry: 21, fill: C[0], stroke: C[1], 'stroke-width': 1.5 });
+    add(g, 'path', { d: 'M -15 2 Q 0 -10 15 2 Q 10 15 0 17 Q -10 15 -15 2 Z', fill: '#fff7f1' });
+    drawBlush(g); drawEyes(g, mood, -7, 7, -2, '#5e4f4d');
+    add(g, 'ellipse', { cx: 0, cy: 8, rx: 3.8, ry: 3, fill: '#5e4f4d' }); mouth(g, C[1], mood);
+  }
+
+  function drawCritter(parent, c, x, y, s){
+    if(c.type === 'corgi') corgi(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else if(c.type === 'cat') cat(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else if(c.type === 'bird') bird(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else if(c.type === 'bunny') bunny(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else if(c.type === 'bear') bear(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else if(c.type === 'seal') seal(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else if(c.type === 'frog') frog(parent, x, y, s, c.variant, c.mood, c.tilt);
+    else fox(parent, x, y, s, c.variant, c.mood, c.tilt);
+  }
+
+  function drawFish(parent, x, y, s, r, accent){
+    const c = pick(palettes(accent), r);
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${(r() - .5) * 35}) scale(${s})` });
+    add(g, 'ellipse', { cx: 0, cy: 0, rx: 13, ry: 7, fill: c, stroke: '#8b7b94', 'stroke-width': 1 });
+    add(g, 'path', { d: 'M 11 0 L 22 -7 L 22 7 Z', fill: c, stroke: '#8b7b94', 'stroke-width': 1 });
+    add(g, 'circle', { cx: -5, cy: -1, r: 1.3, fill: '#554b58' });
+  }
+
+  function butterfly(parent, x, y, s, r, accent){
+    const p = palettes(accent), c1 = pick(p, r), c2 = pick(p, r);
+    const g = add(parent, 'g', { transform: `translate(${x} ${y}) rotate(${(r() - .5) * 35}) scale(${s})` });
+    add(g, 'ellipse', { cx: -7, cy: -2, rx: 7, ry: 10, fill: c1, opacity: .9, transform: 'rotate(-30 -7 -2)' });
+    add(g, 'ellipse', { cx: 7, cy: -2, rx: 7, ry: 10, fill: c2, opacity: .9, transform: 'rotate(30 7 -2)' });
+    add(g, 'ellipse', { cx: 0, cy: 2, rx: 2, ry: 7, fill: '#76667d' });
+  }
+
+  function drawExtras(svg, r, mode, accent){
+    const g = add(svg, 'g');
+    const count = mode === 'chaotic' ? 12 : mode === 'gentle' ? 5 : 8;
+    for(let i = 0; i < count; i++){
+      const x = 92 + r() * 216, y = 86 + r() * 196;
+      const t = pick(['fish','butterfly','berry','star','leaf','flower'], r);
+      if(t === 'fish') drawFish(g, x, y, .48 + r() * .24, r, accent);
+      else if(t === 'butterfly') butterfly(g, x, y, .5 + r() * .25, r, accent);
+      else if(t === 'berry'){
+        add(g, 'circle', { cx: x, cy: y, r: 3, fill: pick(palettes(accent), r) });
+        add(g, 'circle', { cx: x + 6, cy: y + 4, r: 2.5, fill: pick(palettes(accent), r) });
+      } else if(t === 'star') add(g, 'text', { x, y, 'text-anchor': 'middle', 'font-size': 9 + r() * 5, fill: pick(palettes(accent), r) }, '✦');
+      else if(t === 'leaf') drawLeaf(g, x, y, .65 + r() * .22, (r() - .5) * 100, pick(['#a5c8a7','#b8d5bb','#98bb9c'], r));
+      else drawTinyFlower(g, x, y, .42 + r() * .2, pick(palettes(accent), r));
+    }
+  }
+
+  function chooseBowStyle(name, note, choice){
+    if(choice !== 'auto') return choice;
+    return ['classic','round','flutter','layered'][hashStr(name + '|' + note) % 4];
+  }
+
+  function drawBow(svg, x, y, style, r, accent){
+    const g = add(svg, 'g', { filter: 'drop-shadow(0 2px 4px rgba(120,95,140,.15))' });
+    const pal = palettes(accent);
+    const main = pick(pal, r);
+    const side = pick(pal, r);
+    const edge = '#c5b1da';
+
+    add(svg, 'path', { d: `M ${x} ${y - 80} L ${x - 8} ${y - 6} L ${x + 8} ${y - 6} Z`, fill: '#9ab79d', opacity: .85 });
+    add(svg, 'path', { d: `M ${x - 8} ${y - 4} L ${x - 22} ${y + 46}`, stroke: '#98b59b', 'stroke-width': 4.2, 'stroke-linecap': 'round' });
+    add(svg, 'path', { d: `M ${x + 8} ${y - 4} L ${x + 22} ${y + 46}`, stroke: '#98b59b', 'stroke-width': 4.2, 'stroke-linecap': 'round' });
+
+    if(style === 'round'){
+      add(g, 'ellipse', { cx: x - 18, cy: y, rx: 21, ry: 17, fill: main, stroke: edge, 'stroke-width': 1.4, transform: `rotate(-20 ${x - 18} ${y})` });
+      add(g, 'ellipse', { cx: x + 18, cy: y, rx: 21, ry: 17, fill: side, stroke: edge, 'stroke-width': 1.4, transform: `rotate(20 ${x + 18} ${y})` });
+      add(g, 'ellipse', { cx: x, cy: y, rx: 11, ry: 13, fill: '#efe6fb', stroke: edge, 'stroke-width': 1.2 });
+    } else if(style === 'flutter'){
+      add(g, 'path', { d: `M ${x - 3} ${y} C ${x - 16} ${y - 18}, ${x - 44} ${y - 20}, ${x - 56} ${y - 1} C ${x - 39} ${y + 8}, ${x - 17} ${y + 7}, ${x - 3} ${y} Z`, fill: main, stroke: edge, 'stroke-width': 1.4 });
+      add(g, 'path', { d: `M ${x + 3} ${y} C ${x + 16} ${y - 18}, ${x + 44} ${y - 20}, ${x + 56} ${y - 1} C ${x + 39} ${y + 8}, ${x + 17} ${y + 7}, ${x + 3} ${y} Z`, fill: side, stroke: edge, 'stroke-width': 1.4 });
+      add(g, 'rect', { x: x - 8, y: y - 11, width: 16, height: 22, rx: 6, fill: '#efe6fb', stroke: edge, 'stroke-width': 1.2 });
+    } else if(style === 'layered'){
+      add(g, 'ellipse', { cx: x - 16, cy: y - 2, rx: 18, ry: 14, fill: '#f7e9f2', stroke: edge, 'stroke-width': 1.2, transform: `rotate(-20 ${x - 16} ${y - 2})` });
+      add(g, 'ellipse', { cx: x + 16, cy: y - 2, rx: 18, ry: 14, fill: '#e7f0fb', stroke: edge, 'stroke-width': 1.2, transform: `rotate(20 ${x + 16} ${y - 2})` });
+      add(g, 'ellipse', { cx: x - 22, cy: y + 1, rx: 18, ry: 13, fill: main, stroke: edge, 'stroke-width': 1.3, transform: `rotate(-24 ${x - 22} ${y + 1})` });
+      add(g, 'ellipse', { cx: x + 22, cy: y + 1, rx: 18, ry: 13, fill: side, stroke: edge, 'stroke-width': 1.3, transform: `rotate(24 ${x + 22} ${y + 1})` });
+      add(g, 'ellipse', { cx: x, cy: y, rx: 10, ry: 12, fill: '#efe6fb', stroke: edge, 'stroke-width': 1.1 });
+    } else {
+      add(g, 'path', { d: `M ${x - 2} ${y} C ${x - 18} ${y - 16}, ${x - 42} ${y - 17}, ${x - 49} ${y + 1} C ${x - 34} ${y + 12}, ${x - 15} ${y + 8}, ${x - 2} ${y} Z`, fill: main, stroke: edge, 'stroke-width': 1.4 });
+      add(g, 'path', { d: `M ${x + 2} ${y} C ${x + 18} ${y - 16}, ${x + 42} ${y - 17}, ${x + 49} ${y + 1} C ${x + 34} ${y + 12}, ${x + 15} ${y + 8}, ${x + 2} ${y} Z`, fill: side, stroke: edge, 'stroke-width': 1.4 });
+      add(g, 'rect', { x: x - 8, y: y - 10, width: 16, height: 20, rx: 6, fill: '#efe6fb', stroke: edge, 'stroke-width': 1.2 });
+    }
+
+    add(g, 'path', { d: `M ${x - 4} ${y + 8} L ${x - 28} ${y + 52} Q ${x - 18} ${y + 54} ${x - 10} ${y + 46} L ${x + 1} ${y + 14} Z`, fill: main, stroke: edge, 'stroke-width': 1.2, opacity: .95 });
+    add(g, 'path', { d: `M ${x + 4} ${y + 8} L ${x + 28} ${y + 52} Q ${x + 18} ${y + 54} ${x + 10} ${y + 46} L ${x - 1} ${y + 14} Z`, fill: side, stroke: edge, 'stroke-width': 1.2, opacity: .95 });
+  }
+
+  function placement(name, note, choice){
+    if(choice !== 'auto') return choice;
+    return ['upper-left','upper-right','top'][hashStr(name + '|' + note) % 3];
+  }
+
+  function drawNote(svg, uid, name, note, p){
+    const g = add(svg, 'g', { filter: 'url(#tag-' + uid + ')' });
+    if(p === 'upper-right'){
+      add(g, 'rect', { x: 274, y: 44, width: 104, height: 58, rx: 13, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2, transform: 'rotate(7 274 44)' });
+      add(g, 'text', { x: 326, y: 68, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 900, fill: '#6b5877', transform: 'rotate(7 326 68)' }, trimText(name, 12));
+      add(g, 'text', { x: 326, y: 88, 'text-anchor': 'middle', 'font-size': 7.8, fill: '#91809d', transform: 'rotate(7 326 88)' }, trimText(note, 18));
+    } else if(p === 'top'){
+      add(g, 'rect', { x: 148, y: 26, width: 104, height: 56, rx: 13, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2 });
+      add(g, 'text', { x: 200, y: 49, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 900, fill: '#6b5877' }, trimText(name, 12));
+      add(g, 'text', { x: 200, y: 68, 'text-anchor': 'middle', 'font-size': 7.8, fill: '#91809d' }, trimText(note, 18));
+    } else {
+      add(g, 'rect', { x: 22, y: 46, width: 104, height: 58, rx: 13, fill: '#fffafb', stroke: '#eadfea', 'stroke-width': 1.2, transform: 'rotate(-7 22 46)' });
+      add(g, 'text', { x: 74, y: 70, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 900, fill: '#6b5877', transform: 'rotate(-7 74 70)' }, trimText(name, 12));
+      add(g, 'text', { x: 74, y: 90, 'text-anchor': 'middle', 'font-size': 7.8, fill: '#91809d', transform: 'rotate(-7 74 90)' }, trimText(note, 18));
+    }
+  }
+
+  function renderBouquet(entry, options, index){
+    const name = entry.name || 'Someone';
+    const note = entry.note || 'tiny note';
+    const count = critterCount(name, options.sizeMode);
+    const critters = sequenceFromName(name, note, count, options.seed);
+    const slots = fanSlots(count);
+    const seed = hashStr(name + '|' + note + '|' + options.seed + '|' + index);
+    const r = rngFactory(seed);
+    const uid = 'u' + seed.toString(16);
+
+    const card = document.createElement('div');
+    card.className = 'bouquet-card';
+    const top = document.createElement('div');
+    top.className = 'bouquet-actions';
+    const title = document.createElement('p');
+    title.className = 'bouquet-name';
+    title.textContent = name;
+    const dl = document.createElement('button');
+    dl.className = 'mini-btn';
+    dl.type = 'button';
+    dl.textContent = 'Download SVG';
+    top.appendChild(title);
+    top.appendChild(dl);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'svg-wrap';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 400 500');
+    wrap.appendChild(svg);
+
+    attachDefs(svg, uid);
+    drawBackground(svg, uid, r, options.accent);
+    drawStemBundle(svg, slots, r);
+    drawPlantFan(svg, r, options.accent, options.sizeMode);
+    drawFillers(svg, r, options.accent, options.sizeMode);
+    drawExtras(svg, r, options.extras, options.accent);
+
+    const critterLayer = add(svg, 'g', { filter: 'url(#shadow-' + uid + ')' });
+    slots.forEach((slot, i) => drawCritter(critterLayer, critters[i], slot.x, slot.y, slot.scale));
+
+    drawBow(svg, 200, 390, chooseBowStyle(name, note, options.bowStyle), r, options.accent);
+    drawNote(svg, uid, name, note, placement(name, note, options.notePlace));
+
+    dl.addEventListener('click', () => downloadSvg(svg, `${slugify(name)}-critterbloom-bouquet.svg`));
+    card.appendChild(top);
+    card.appendChild(wrap);
+    return card;
+  }
+
+  function downloadSvg(svgNode, filename){
+    const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svgNode);
+    const blob = new Blob([source], { type: 'image/svg+xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 800);
+  }
+
+  function renderAll(){
+    const entries = getEntries();
+    gallery.innerHTML = '';
+    const options = {
+      sizeMode: $('sizeMode').value,
+      seed: clamp(parseInt($('seed').value || '1', 10), 1, 999999),
+      extras: $('extras').value,
+      notePlace: $('notePlace').value,
+      accent: $('accent').value,
+      bowStyle: $('bowStyle').value
+    };
+    $('seed').value = options.seed;
+    entries.forEach((entry, index) => gallery.appendChild(renderBouquet(entry, options, index)));
+  }
+
+  function exportAll(){
+    const svgs = gallery.querySelectorAll('svg');
+    const entries = getEntries();
+    svgs.forEach((svg, i) => {
+      const name = entries[i]?.name || `bouquet-${i + 1}`;
+      downloadSvg(svg, `${slugify(name)}-critterbloom-bouquet.svg`);
+    });
+  }
+
+  $('addEntry').addEventListener('click', () => makeEntry({ name: '', note: '' }));
+  $('demoBtn').addEventListener('click', () => { entryList.innerHTML = ''; defaults.forEach(makeEntry); renderAll(); });
+  $('shuffleBtn').addEventListener('click', () => { $('seed').value = Math.floor(Math.random() * 999998) + 1; renderAll(); });
+  $('exportAllBtn').addEventListener('click', exportAll);
+  $('renderBtn').addEventListener('click', renderAll);
+  ['sizeMode','seed','extras','notePlace','accent','bowStyle'].forEach(id => {
+    $(id).addEventListener('change', renderAll);
+    $(id).addEventListener('input', renderAll);
+  });
+
+  entryList.innerHTML = '';
+  makeEntry({ name: '', note: '' });
+  renderAll();
+})();
+</script>
+</body>
+</html>
