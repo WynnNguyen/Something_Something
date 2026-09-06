@@ -782,10 +782,18 @@
   function exportWallpaperFromSvg(svgNode, filename, presetKey, recipientName = ''){
     return new Promise((resolve, reject) => {
       const preset = getWallpaperPreset(presetKey);
-      const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svgNode);
+
+      const svgClone = svgNode.cloneNode(true);
+      svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      svgClone.setAttribute('width', '400');
+      svgClone.setAttribute('height', '500');
+      svgClone.setAttribute('viewBox', '0 0 400 500');
+
+      const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svgClone);
       const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const img = new Image();
+
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
@@ -793,28 +801,34 @@
           canvas.height = preset.height;
           const ctx = canvas.getContext('2d');
 
-          ctx.fillStyle = solidBg(document.getElementById('accent').value);
+          const bg = solidBg(document.getElementById('accent').value);
+          ctx.fillStyle = bg;
           ctx.fillRect(0, 0, preset.width, preset.height);
 
-          const crop = preset.width > preset.height
-            ? { sx: 18, sy: 26, sw: 325, sh: 430, widthFactor: .43, heightFactor: .88, bottomPad: .05 }
-            : { sx: 18, sy: 24, sw: 270, sh: 442, widthFactor: .93, heightFactor: .82, bottomPad: .03 };
+          const isLandscape = preset.width > preset.height;
+          const targetWidth = isLandscape ? preset.width * 0.46 : preset.width * 0.92;
+          const targetHeight = isLandscape ? preset.height * 0.90 : preset.height * 0.88;
 
-          const fitW = preset.width * crop.widthFactor;
-          const fitH = preset.height * crop.heightFactor;
-          let drawW = fitW;
-          let drawH = drawW * (crop.sh / crop.sw);
-          if(drawH > fitH){
-            drawH = fitH;
-            drawW = drawH * (crop.sw / crop.sh);
+          let drawW = targetWidth;
+          let drawH = drawW * (500 / 400);
+          if(drawH > targetHeight){
+            drawH = targetHeight;
+            drawW = drawH * (400 / 500);
           }
+
           const x = (preset.width - drawW) / 2;
-          const y = preset.height - drawH - preset.height * crop.bottomPad;
-          ctx.drawImage(img, crop.sx, crop.sy, crop.sw, crop.sh, x, y, drawW, drawH);
+          const y = isLandscape
+            ? (preset.height - drawH) / 2
+            : preset.height - drawH - preset.height * 0.025;
+
+          ctx.drawImage(img, x, y, drawW, drawH);
 
           canvas.toBlob((pngBlob) => {
             URL.revokeObjectURL(url);
-            if(!pngBlob){ reject(new Error('Could not create PNG.')); return; }
+            if(!pngBlob){
+              reject(new Error('Could not create PNG.'));
+              return;
+            }
             triggerDownloadBlob(pngBlob, filename);
             resolve();
           }, 'image/png');
@@ -823,10 +837,12 @@
           reject(err);
         }
       };
+
       img.onerror = () => {
         URL.revokeObjectURL(url);
         reject(new Error('Could not render wallpaper image.'));
       };
+
       img.src = url;
     });
   }
