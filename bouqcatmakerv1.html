@@ -71,6 +71,7 @@
   .primary{background:linear-gradient(135deg,var(--pink),var(--purple),var(--blue))}
   .wide{grid-column:1/-1}
   .mini-btn{padding:7px 10px;font-size:.76rem}
+  .action-group{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .hint{color:var(--muted);font-size:.76rem;line-height:1.35}
   .stage{padding:18px}
   .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
@@ -156,11 +157,21 @@
           <option value="layered">Layered</option>
         </select>
       </div>
+      <div>
+        <label class="label" for="wallpaperSize">Wallpaper</label>
+        <select id="wallpaperSize">
+          <option value="phone" selected>Phone 1170×2532</option>
+          <option value="desktop">Desktop 1920×1080</option>
+          <option value="story">Story 1080×1920</option>
+          <option value="square">Square 1080×1080</option>
+        </select>
+      </div>
     </div>
 
     <div class="controls">
       <button id="shuffleBtn">Shuffle</button>
-      <button id="exportAllBtn">Export all</button>
+      <button id="exportAllBtn">Export all SVG</button>
+      <button id="exportAllWallpaperBtn">Export all PNG</button>
       <button class="primary wide" id="renderBtn">Generate</button>
     </div>
   </section>
@@ -646,12 +657,20 @@
     const title = document.createElement('p');
     title.className = 'bouquet-name';
     title.textContent = name;
+    const actionGroup = document.createElement('div');
+    actionGroup.className = 'action-group';
     const dl = document.createElement('button');
     dl.className = 'mini-btn';
     dl.type = 'button';
     dl.textContent = 'Download SVG';
+    const wall = document.createElement('button');
+    wall.className = 'mini-btn';
+    wall.type = 'button';
+    wall.textContent = 'Wallpaper PNG';
     top.appendChild(title);
-    top.appendChild(dl);
+    actionGroup.appendChild(wall);
+    actionGroup.appendChild(dl);
+    top.appendChild(actionGroup);
 
     const wrap = document.createElement('div');
     wrap.className = 'svg-wrap';
@@ -673,6 +692,7 @@
     drawNote(svg, uid, name, note, placement(name, note, options.notePlace));
 
     dl.addEventListener('click', () => downloadSvg(svg, `${slugify(name)}-critterbloom-bouquet.svg`));
+    wall.addEventListener('click', () => exportWallpaperFromSvg(svg, `${slugify(name)}-critterbloom-wallpaper.png`, $('wallpaperSize').value, name));
     card.appendChild(top);
     card.appendChild(wrap);
     return card;
@@ -688,6 +708,100 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 800);
+  }
+
+
+  function getWallpaperPreset(key){
+    const presets = {
+      phone:   { width: 1170, height: 2532, fit: .82, bottomPad: .04 },
+      desktop: { width: 1920, height: 1080, fit: .72, bottomPad: .04 },
+      story:   { width: 1080, height: 1920, fit: .84, bottomPad: .04 },
+      square:  { width: 1080, height: 1080, fit: .78, bottomPad: .05 }
+    };
+    return presets[key] || presets.phone;
+  }
+
+  function triggerDownloadBlob(blob, filename){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+  }
+
+  function exportWallpaperFromSvg(svgNode, filename, presetKey, recipientName = ''){
+    return new Promise((resolve, reject) => {
+      const preset = getWallpaperPreset(presetKey);
+      const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svgNode);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = preset.width;
+          canvas.height = preset.height;
+          const ctx = canvas.getContext('2d');
+
+          const grad = ctx.createLinearGradient(0, 0, preset.width, preset.height);
+          grad.addColorStop(0, '#fff8fc');
+          grad.addColorStop(.48, '#f4eeff');
+          grad.addColorStop(1, '#eef5ff');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, preset.width, preset.height);
+
+          const bgRng = rngFactory(hashStr(filename + '|' + recipientName + '|' + preset.width + 'x' + preset.height));
+          const bubbles = preset.width > preset.height ? 26 : 34;
+          for(let i = 0; i < bubbles; i++){
+            const x = bgRng() * preset.width;
+            const y = bgRng() * preset.height;
+            const radius = (preset.width > preset.height ? 18 : 24) + bgRng() * (preset.width > preset.height ? 40 : 55);
+            const colors = ['rgba(246,203,224,.14)','rgba(220,204,244,.14)','rgba(209,225,250,.16)','rgba(255,255,255,.18)'];
+            ctx.fillStyle = colors[Math.floor(bgRng() * colors.length)];
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          const svgW = 400, svgH = 500;
+          const fitW = preset.width * (preset.width > preset.height ? .42 : .86) * preset.fit;
+          const fitH = preset.height * (preset.width > preset.height ? .86 : .74) * preset.fit;
+          let drawW = fitW;
+          let drawH = drawW * (svgH / svgW);
+          if(drawH > fitH){
+            drawH = fitH;
+            drawW = drawH * (svgW / svgH);
+          }
+          const x = (preset.width - drawW) / 2;
+          const y = preset.height - drawH - preset.height * preset.bottomPad;
+          ctx.drawImage(img, x, y, drawW, drawH);
+
+          if(recipientName){
+            ctx.fillStyle = 'rgba(101,84,116,.9)';
+            ctx.textAlign = 'center';
+            ctx.font = `${preset.width > preset.height ? 36 : 44}px ui-rounded, "Nunito", "Segoe UI", sans-serif`;
+            ctx.fillText(recipientName, preset.width / 2, preset.width > preset.height ? 74 : 92);
+          }
+
+          canvas.toBlob((pngBlob) => {
+            URL.revokeObjectURL(url);
+            if(!pngBlob){ reject(new Error('Could not create PNG.')); return; }
+            triggerDownloadBlob(pngBlob, filename);
+            resolve();
+          }, 'image/png');
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Could not render wallpaper image.'));
+      };
+      img.src = url;
+    });
   }
 
   function renderAll(){
@@ -714,12 +828,23 @@
     });
   }
 
+  async function exportAllWallpapers(){
+    const svgs = Array.from(gallery.querySelectorAll('svg'));
+    const entries = getEntries();
+    const presetKey = $('wallpaperSize').value;
+    for(let i = 0; i < svgs.length; i++){
+      const name = entries[i]?.name || `bouquet-${i + 1}`;
+      await exportWallpaperFromSvg(svgs[i], `${slugify(name)}-critterbloom-wallpaper.png`, presetKey, name);
+    }
+  }
+
   $('addEntry').addEventListener('click', () => makeEntry({ name: '', note: '' }));
   $('demoBtn').addEventListener('click', () => { entryList.innerHTML = ''; defaults.forEach(makeEntry); renderAll(); });
   $('shuffleBtn').addEventListener('click', () => { $('seed').value = Math.floor(Math.random() * 999998) + 1; renderAll(); });
   $('exportAllBtn').addEventListener('click', exportAll);
+  $('exportAllWallpaperBtn').addEventListener('click', () => { exportAllWallpapers(); });
   $('renderBtn').addEventListener('click', renderAll);
-  ['sizeMode','seed','extras','notePlace','accent','bowStyle'].forEach(id => {
+  ['sizeMode','seed','extras','notePlace','accent','bowStyle','wallpaperSize'].forEach(id => {
     $(id).addEventListener('change', renderAll);
     $(id).addEventListener('input', renderAll);
   });
